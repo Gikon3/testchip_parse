@@ -33,6 +33,7 @@ class MemoryParser(BaseParser):
 
         self.brief_file = brief_data_file
         self.errors_dict = {module: [0, []] for module in self.SH_MEM}
+        self.multiple_errors_dict = {module: [0, []] for module in self.SH_MEM}
         self.module_name = {module: name for module, name in zip(self.SH_MEM, self.MODULE_NAME_LIST)}
 
     def reset_error_dict(self):
@@ -88,24 +89,39 @@ class MemoryParser(BaseParser):
                     f_errors = False
                     self.errors_dict[opcode][0] += number_package_errors
                     self.errors_dict[opcode][1].append(package_errors)
+                    if len(package_errors) > 1:
+                        self.multiple_errors_dict[opcode][0] += number_package_errors
+                        self.multiple_errors_dict[opcode][1].append(package_errors)
                     number_package_errors = 0
                     package_errors = []
 
-    def create_dir(self, path_dir):
+    @staticmethod
+    def create_dir(path_dir):
         import os
         if os.path.isdir(path_dir) is False:
             os.mkdir(path_dir)
 
-    def gen_filename(self, filename):
+    @staticmethod
+    def gen_filename(filename):
         import os
         return os.path.split(os.path.splitext(filename)[0])[1] + ".txt"
 
-    def print_errors(self, filename):
+    # def print_errors(self, filename):
+    #     import json
+    #     for module_opcode, error_pack in self.errors_dict.items():
+    #         module_name = self.module_name[module_opcode]
+    #         error_list = error_pack[1]
+    #         error_file = f"{module_name}/{self.gen_filename(filename)}"
+    #         self.create_dir(module_name)
+    #         with open(error_file, 'w') as f:
+    #             json.dump(error_list, f, indent=2)
+
+    def print_errors(self, filename_out, errors_dict):
         import json
-        for module_opcode, error_pack in self.errors_dict.items():
+        for module_opcode, error_pack in errors_dict.items():
             module_name = self.module_name[module_opcode]
             error_list = error_pack[1]
-            error_file = f"{module_name}/{self.gen_filename(filename)}"
+            error_file = f"{module_name}/{filename_out}"
             self.create_dir(module_name)
             with open(error_file, 'w') as f:
                 json.dump(error_list, f, indent=2)
@@ -125,6 +141,8 @@ class MemoryParser(BaseParser):
             line_list = f.readlines()
 
         self.find_error(line_list, cosrad)
-        self.print_errors(filename)
+        # self.print_errors(filename)
+        self.print_errors(self.gen_filename(filename), self.errors_dict)
+        self.print_errors("multiple_" + self.gen_filename(filename), self.multiple_errors_dict)
         self.print_brief_errors(filename)
 
