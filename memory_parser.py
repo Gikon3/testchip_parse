@@ -38,6 +38,7 @@ class MemoryParser(BaseParser):
 
     def reset_error_dict(self):
         self.errors_dict = {module: [0, []] for module in self.SH_MEM}
+        self.multiple_errors_dict = {module: [0, []] for module in self.SH_MEM}
 
     def find_error(self, massive, cosrad):
         import operator
@@ -106,16 +107,6 @@ class MemoryParser(BaseParser):
         import os
         return os.path.split(os.path.splitext(filename)[0])[1] + ".txt"
 
-    # def print_errors(self, filename):
-    #     import json
-    #     for module_opcode, error_pack in self.errors_dict.items():
-    #         module_name = self.module_name[module_opcode]
-    #         error_list = error_pack[1]
-    #         error_file = f"{module_name}/{self.gen_filename(filename)}"
-    #         self.create_dir(module_name)
-    #         with open(error_file, 'w') as f:
-    #             json.dump(error_list, f, indent=2)
-
     def print_errors(self, filename_out, errors_dict):
         import json
         for module_opcode, error_pack in errors_dict.items():
@@ -126,10 +117,10 @@ class MemoryParser(BaseParser):
             with open(error_file, 'w') as f:
                 json.dump(error_list, f, indent=2)
 
-    def print_brief_errors(self, filename):
+    def print_brief_errors(self, filename_out, errors_dict):
         with open(self.brief_file, 'a') as f:
-            brief_data_list = [f"{filename}\n  Errors\n"]
-            for module_opcode, error_pack in self.errors_dict.items():
+            brief_data_list = [f"{filename_out}\n  Errors\n"]
+            for module_opcode, error_pack in errors_dict.items():
                 module_name = self.module_name[module_opcode]
                 number_errors = error_pack[0]
                 brief_data_list.append("    {0:<27s}: {1:d}\n".format(module_name, number_errors))
@@ -137,12 +128,15 @@ class MemoryParser(BaseParser):
             f.writelines(brief_data_list)
 
     def error_parse(self, filename, cosrad):
+        import os
         with open(filename, 'r') as f:
             line_list = f.readlines()
 
         self.find_error(line_list, cosrad)
-        # self.print_errors(filename)
         self.print_errors(self.gen_filename(filename), self.errors_dict)
         self.print_errors("multiple_" + self.gen_filename(filename), self.multiple_errors_dict)
-        self.print_brief_errors(filename)
+        self.print_brief_errors(filename, self.errors_dict)
+        multiple_error_name_split = os.path.split(filename)
+        multiple_error_name = multiple_error_name_split[0] + "/multiple_" + multiple_error_name_split[1]
+        self.print_brief_errors(multiple_error_name, self.multiple_errors_dict)
 
