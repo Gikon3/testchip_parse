@@ -30,6 +30,7 @@ class MemoryParser(BaseParser):
         self.REFERENCE1 = self.SYMBOL1 * 8
 
         self.THRESHOLD = 64
+        self.RANGE_GROUP = 64
 
         self.brief_file = brief_data_file
         self.errors_dict = {module: [0, []] for module in self.SH_MEM}
@@ -39,6 +40,24 @@ class MemoryParser(BaseParser):
     def reset_error_dict(self):
         self.errors_dict = {module: [0, []] for module in self.SH_MEM}
         self.multiple_errors_dict = {module: [0, []] for module in self.SH_MEM}
+
+    def div_into_groups(self, massive):
+        import math
+        div_massive = []
+        group = []
+        group_address = int(massive[0][2], 16)
+        for i, frame in enumerate(massive):
+            address = int(frame[2], 16)
+            if math.fabs(address - group_address) > self.RANGE_GROUP:
+                if len(group) > 1:
+                    div_massive.append(group)
+                group = [frame]
+            else:
+                group.append(frame)
+            group_address = address
+        if len(group) > 1:
+            div_massive.append(group)
+        return div_massive
 
     def find_error(self, massive, cosrad):
         import operator
@@ -88,13 +107,15 @@ class MemoryParser(BaseParser):
 
                 if count_errors == number_errors * 2:
                     f_errors = False
-                    self.errors_dict[opcode][0] += number_package_errors
-                    self.errors_dict[opcode][1].append(package_errors)
                     if len(package_errors) > 1:
-                        self.multiple_errors_dict[opcode][0] += number_package_errors
-                        self.multiple_errors_dict[opcode][1].append(package_errors)
-                    number_package_errors = 0
-                    package_errors = []
+                        self.errors_dict[opcode][0] += number_package_errors
+                        self.errors_dict[opcode][1].append(package_errors)
+                        mult_errors_list = self.div_into_groups(package_errors)
+                        if len(mult_errors_list) > 1:
+                            # self.multiple_errors_dict[opcode][0] += number_package_errors
+                            self.multiple_errors_dict[opcode][1].append(mult_errors_list)
+                        number_package_errors = 0
+                        package_errors = []
 
     @staticmethod
     def create_dir(path_dir):
@@ -136,7 +157,7 @@ class MemoryParser(BaseParser):
         self.print_errors(self.gen_filename(filename), self.errors_dict)
         self.print_errors("multiple_" + self.gen_filename(filename), self.multiple_errors_dict)
         self.print_brief_errors(filename, self.errors_dict)
-        multiple_error_name_split = os.path.split(filename)
-        multiple_error_name = multiple_error_name_split[0] + "/multiple_" + multiple_error_name_split[1]
-        self.print_brief_errors(multiple_error_name, self.multiple_errors_dict)
+        # multiple_error_name_split = os.path.split(filename)
+        # multiple_error_name = multiple_error_name_split[0] + "/multiple_" + multiple_error_name_split[1]
+        # self.print_brief_errors(multiple_error_name, self.multiple_errors_dict)
 
