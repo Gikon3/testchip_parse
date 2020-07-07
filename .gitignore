@@ -1,2 +1,11 @@
 /.idea/
 /__pycache__/
+/DFF (with Hamming)/
+/DFF (without DICE)/
+/DICE/
+/DICE_band/
+/DICE_band_cutWell/
+/DICE_band_cutWell (CGDICE)/
+/DICE_band_cutWell (CKLNQD1)/
+/DICE_cutWell/
+/Hamming code/
