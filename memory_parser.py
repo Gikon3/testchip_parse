@@ -107,15 +107,15 @@ class MemoryParser(BaseParser):
 
                 if count_errors == number_errors * 2:
                     f_errors = False
-                    if len(package_errors) > 1:
+                    if len(package_errors) > 0:
                         self.errors_dict[opcode][0] += number_package_errors
                         self.errors_dict[opcode][1].append(package_errors)
                         mult_errors_list = self.div_into_groups(package_errors)
                         if len(mult_errors_list) > 1:
                             # self.multiple_errors_dict[opcode][0] += number_package_errors
                             self.multiple_errors_dict[opcode][1].append(mult_errors_list)
-                        number_package_errors = 0
-                        package_errors = []
+                    number_package_errors = 0
+                    package_errors = []
 
     @staticmethod
     def create_dir(path_dir):
