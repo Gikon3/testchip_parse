@@ -96,11 +96,13 @@ class MemoryParser(BaseParser):
                     if fact != self.REFERENCE0 and fact != self.REFERENCE1 and count_errors % 2 == 1:
                         number_5 = fact.count(self.SYMBOL0)
                         number_a = fact.count(self.SYMBOL1)
-                        if number_5 > 5 or number_a > 5:
+                        if address != "00001200" and address != "00001210":
                             pattern = self.REFERENCE0 if number_5 > number_a else self.REFERENCE1
-                            error_xor = "{0:032b}".format(operator.xor(int(fact, 16), int(pattern, 16)))
-                            package_errors.append([date, time, address, error_xor])
-                            number_package_errors += sum([int(i) for i in error_xor])
+                        else:
+                            pattern = "00000000"
+                        error_xor = "{0:032b}".format(operator.xor(int(fact, 16), int(pattern, 16)))
+                        package_errors.append([date, time, address, error_xor])
+                        number_package_errors += sum([int(i) for i in error_xor])
                     elif count_errors % 2 == 0:
                         address = fact
                     count_errors += 1
